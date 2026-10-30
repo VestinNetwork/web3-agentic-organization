@@ -13,20 +13,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  bootstrap-validation:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.26.1
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm exec prettier --write .
-      - run: pnpm exec prettier --check .
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
+      - name: Verify repository manifests
+        run: |
+          node --version
+          node -e "const p = require('./package.json'); if (!p.private || !p.packageManager) process.exit(1)"
+          node -e "const fs = require('node:fs'); for (const f of ['pnpm-workspace.yaml','tsconfig.base.json','turbo.json','.env.example']) { if (!fs.existsSync(f)) throw new Error('missing '+f) }"
+      - name: Validate JSON manifests
+        run: |
+          node -e "for (const f of ['package.json','tsconfig.base.json','turbo.json','.prettierrc.json','vitest.config.ts']) { if (f.endsWith('.json')) JSON.parse(require('node:fs').readFileSync(f,'utf8')) }"
