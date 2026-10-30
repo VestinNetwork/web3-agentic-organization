@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  repository-validation:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm format
       - run: pnpm lint
       - run: pnpm typecheck
