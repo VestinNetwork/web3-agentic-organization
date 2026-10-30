@@ -1,41 +1,29 @@
 # Production Architecture
 
-## Decision
-
-Use a modular monolith control plane and horizontally scalable worker processes. Keep domain logic independent from agent frameworks, databases, model vendors, and chain SDKs.
+Use a modular monolith control plane with horizontally scalable workers. Domain logic remains independent from agent frameworks, databases, model vendors and chain SDKs.
 
 ## Planes
+1. Human governance: dashboard, approval center and policy administration.
+2. Control plane: organization registry, mission intake, planning and scheduling.
+3. Orchestration: Temporal workflows, task DAG, checkpoints, retries, recovery and approval waits.
+4. Execution: ephemeral workers with scoped identity and isolated workspaces.
+5. Shared platform: agent-global enforcement, OpenXera, Zivi Core, PostgreSQL, Redis, Qdrant and observability.
+6. Adapters: GitHub, MCP, EVM, Solana, RPC/indexer, CI/CD and Safe.
 
-1. **Human governance:** dashboard, approval center, policy administration.
-2. **Control plane:** organization registry, mission intake, planning, scheduling, authorization decisions.
-3. **Orchestration:** Temporal workflows, task DAG, checkpoint/retry/recovery, approval waits.
-4. **Execution:** ephemeral agent workers with scoped identity and isolated workspaces.
-5. **Shared platform:** agent-global enforcement, OpenXera model gateway, Zivi Core knowledge adapter, PostgreSQL, Redis, Qdrant, observability.
-6. **Adapters:** GitHub, MCP tools, EVM, Solana, RPC/indexer, CI/CD, Safe.
-
-## Ownership boundaries
-
+## Ownership
 - PostgreSQL owns authoritative organization, mission, task, approval and audit metadata.
 - Temporal owns durable workflow execution state; PostgreSQL remains business-state authority.
-- Qdrant and graph stores are projections. They can be rebuilt from approved source records.
+- Qdrant and graph stores are rebuildable projections.
 - OpenXera is the only supported model-provider boundary.
-- agent-global supplies global identity/policy/tool enforcement. This application may narrow permissions but must never weaken global policy.
-- Chain adapters provide chain-specific APIs. EVM and Solana transaction semantics are not falsely unified.
+- agent-global is the outer identity, policy and tool enforcement boundary. Organization policies may only narrow permissions.
+- EVM and Solana transaction semantics remain chain-specific.
 
-## Workflow lifecycle
+## Mission flow
+Intake -> policy validation -> plan proposal -> deterministic plan validation -> task graph persistence -> Temporal execution -> evidence collection -> independent review -> approval wait as needed -> final report.
 
-Mission intake -> policy validation -> plan proposal -> plan validation -> task graph persistence -> Temporal execution -> evidence collection -> independent review -> approval wait (when required) -> completion/report.
+Models may propose; deterministic validators enforce schemas, dependencies, budgets, authorization and state transitions.
 
-The model may propose tasks. Deterministic validators enforce schemas, dependencies, budgets, authorization, and state transitions.
+## Failure and deployment
+External commands are idempotent or deduplicated. Activities use bounded retries, timeouts and cancellation. Local Ubuntu is for development/static analysis; cloud runs private control plane and workers. Use authenticated private networking and TLS. Never expose PostgreSQL, Redis, Qdrant or Temporal APIs publicly.
 
-## Failure handling
-
-All external commands must be idempotent or have a deduplication key. Activities use bounded retries, explicit timeouts, cancellation, and compensation where possible. A worker crash must not erase workflow state.
-
-## Deployment topology
-
-Local Ubuntu is for development, code access, static analysis and developer tooling. Cloud runs private control-plane and worker services. Private connectivity is via authenticated TLS over a private overlay (e.g. Tailscale); a tunnel may expose only explicitly public ingress. Databases, Redis, Qdrant and Temporal APIs must not be exposed directly to the public internet.
-
-## Scaling
-
-Start with one control-plane deployment and separate worker pools by trust domain (research, code execution, security, chain read-only). Scale workers horizontally. Privileged execution uses separate hardened workload pools or microVMs.
+Separate worker pools by trust domain. Use VM/microVM isolation for high-risk arbitrary code.
