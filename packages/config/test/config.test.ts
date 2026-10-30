@@ -13,10 +13,7 @@ describe("runtime configuration", () => {
   });
 
   it("requires configured endpoint for enabled integration", () => {
-    expect(() => loadRuntimeConfig({
-      NODE_ENV: "test",
-      AGENT_GLOBAL_INTEGRATION_ENABLED: "true",
-    })).toThrow(/AGENT_GLOBAL_BASE_URL/);
+    expect(() => loadRuntimeConfig({ NODE_ENV: "test", AGENT_GLOBAL_INTEGRATION_ENABLED: "true" })).toThrow(/AGENT_GLOBAL_BASE_URL/);
   });
 
   it("rejects malformed booleans and unsupported URLs", () => {
