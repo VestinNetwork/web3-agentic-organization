@@ -1,21 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type {
-  AgentGlobalEnforcementPort,
-  ChainReadPort,
-  DurableWorkflowPort,
-  ModelGatewayPort,
-} from "../src/index.js";
+import type { AgentGlobalEnforcementPort, ChainReadPort, DurableWorkflowPort, ModelGatewayPort } from "../src/index.js";
 
 describe("external integration ports", () => {
-  it("keep enforcement, workflow, model and chain concerns separate", () => {
+  it("keep platform, model, workflow and blockchain concerns independently injectable", () => {
     const enforcement: AgentGlobalEnforcementPort = {
       async authorize() {
-        return {
-          effect: "deny",
-          decisionId: "decision-1",
-          policyVersion: "global-v1",
-          reasonCode: "not_configured",
-        };
+        return { effect: "deny", decisionId: "decision-1", policyVersion: "global-v1", reasonCode: "not_configured" };
       },
       async recordResult() {},
     };
@@ -26,14 +16,7 @@ describe("external integration ports", () => {
     };
     const model: ModelGatewayPort = {
       async generate() {
-        return {
-          providerModel: "test-model",
-          output: "plan",
-          inputTokens: 1,
-          outputTokens: 1,
-          costUsd: 0,
-          requestId: "request-1",
-        };
+        return { providerModel: "test-model", output: "proposal", inputTokens: 1, outputTokens: 1, costUsd: 0, requestId: "request-1" };
       },
     };
     const chain: ChainReadPort = {
