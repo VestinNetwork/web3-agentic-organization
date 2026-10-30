@@ -18,9 +18,7 @@ describe("domain invariants", () => {
   });
 
   it("rejects illegal terminal mission transitions", () => {
-    expect(() => assertMissionTransition("succeeded", "running")).toThrow(
-      DomainInvariantError,
-    );
+    expect(() => assertMissionTransition("succeeded", "running")).toThrow(DomainInvariantError);
     expect(() => assertMissionTransition("planned", "running")).not.toThrow();
   });
 
