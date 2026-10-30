@@ -1,6 +1,6 @@
 # Production Architecture
 
-Use a modular monolith control plane with horizontally scalable workers. Domain logic stays independent from agent frameworks, databases, model vendors and chain SDKs.
+Use a modular monolith control plane with horizontally scalable workers. Domain logic remains independent from agent frameworks, databases, model vendors and chain SDKs.
 
 ## Planes
 1. Human governance: dashboard, approval center and policy administration.
