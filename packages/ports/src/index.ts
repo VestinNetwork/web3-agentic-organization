@@ -23,11 +23,7 @@ export interface EnforcementDecision {
 
 export interface AgentGlobalEnforcementPort {
   authorize(invocation: ToolInvocation, signal?: AbortSignal): Promise<EnforcementDecision>;
-  recordResult(
-    decisionId: string,
-    outcome: "succeeded" | "failed" | "denied",
-    resultDigest?: string,
-  ): Promise<void>;
+  recordResult(decisionId: string, outcome: "succeeded" | "failed" | "denied", resultDigest?: string): Promise<void>;
 }
 
 export interface ModelRequest {
