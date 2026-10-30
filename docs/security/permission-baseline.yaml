@@ -1,0 +1,41 @@
+version: 1
+default: deny
+
+global:
+  enforcement: agent-global
+  failure_mode: fail-closed-for-protected-actions
+  organization_policy_may_only: restrict
+
+roles:
+  researcher:
+    capabilities: [knowledge.read, web.research, chain.read]
+    denied: [filesystem.write, wallet.sign, mainnet.deploy, treasury.transfer, protocol.upgrade]
+  architect:
+    capabilities: [knowledge.read, repository.read, architecture.propose]
+    denied: [wallet.sign, mainnet.deploy, treasury.transfer, protocol.upgrade]
+  engineer:
+    capabilities: [knowledge.read, repository.read, repository.branch.write, sandbox.execute, ci.run, chain.read, contract.simulate]
+    denied: [wallet.sign, mainnet.deploy, treasury.transfer, protocol.upgrade]
+  auditor:
+    capabilities: [repository.read, ci.run, static_analysis.run, fuzzing.run, security.finding.write]
+    denied: [repository.protected_branch.write, wallet.sign, mainnet.deploy, treasury.transfer, protocol.upgrade]
+  qa:
+    capabilities: [repository.read, ci.run, test.run, release.evidence.write]
+    denied: [wallet.sign, mainnet.deploy, treasury.transfer, protocol.upgrade]
+  operations:
+    capabilities: [chain.read, monitoring.read, incident.propose]
+    denied: [wallet.sign, treasury.transfer, protocol.upgrade]
+  release_operator:
+    capabilities: [artifact.read, deployment.propose, testnet.deploy]
+    requires_approval: [mainnet.deploy]
+    denied: [wallet.sign, treasury.transfer, protocol.upgrade]
+
+high_impact_actions:
+  - mainnet.deploy
+  - wallet.sign
+  - treasury.transfer
+  - protocol.upgrade
+  - token.mint
+  - ownership.transfer
+  approval: explicit-human-and/or-governance-policy
+  llm_direct_signing: deny
