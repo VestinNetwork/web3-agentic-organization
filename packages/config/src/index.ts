@@ -25,14 +25,23 @@ export class ConfigurationError extends Error {
 function optionalUrl(env: Record<string, string | undefined>, key: string): string | undefined {
   const value = env[key]?.trim();
   if (!value) return undefined;
+
   let parsed: URL;
   try {
     parsed = new URL(value);
   } catch {
     throw new ConfigurationError(`${key} must be a valid URL`);
   }
-  const allowed = new Set(["http:", "https:", "redis:", "rediss:", "postgres:", "postgresql:"]);
-  if (!allowed.has(parsed.protocol)) {
+
+  const allowedProtocols = new Set([
+    "http:",
+    "https:",
+    "redis:",
+    "rediss:",
+    "postgres:",
+    "postgresql:",
+  ]);
+  if (!allowedProtocols.has(parsed.protocol)) {
     throw new ConfigurationError(`${key} uses an unsupported protocol`);
   }
   return value;
