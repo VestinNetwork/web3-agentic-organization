@@ -13,15 +13,13 @@ describe("runtime configuration", () => {
   });
 
   it("requires configured endpoint for enabled integration", () => {
-    expect(() =>
-      loadRuntimeConfig({
-        NODE_ENV: "test",
-        AGENT_GLOBAL_INTEGRATION_ENABLED: "true",
-      }),
-    ).toThrow(/AGENT_GLOBAL_BASE_URL/);
+    expect(() => loadRuntimeConfig({
+      NODE_ENV: "test",
+      AGENT_GLOBAL_INTEGRATION_ENABLED: "true",
+    })).toThrow(/AGENT_GLOBAL_BASE_URL/);
   });
 
-  it("rejects malformed booleans and URLs", () => {
+  it("rejects malformed booleans and unsupported URLs", () => {
     expect(() => loadRuntimeConfig({ NODE_ENV: "test", OPENXERA_INTEGRATION_ENABLED: "yes" })).toThrow();
     expect(() => loadRuntimeConfig({ NODE_ENV: "test", DATABASE_URL: "file:///tmp/db" })).toThrow();
   });

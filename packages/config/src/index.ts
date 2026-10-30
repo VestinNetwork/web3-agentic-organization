@@ -22,7 +22,7 @@ export class ConfigurationError extends Error {
   }
 }
 
-function optionalUrl(env: NodeJS.ProcessEnv, key: string): string | undefined {
+function optionalUrl(env: Record<string, string | undefined>, key: string): string | undefined {
   const value = env[key]?.trim();
   if (!value) return undefined;
   let parsed: URL;
@@ -31,27 +31,28 @@ function optionalUrl(env: NodeJS.ProcessEnv, key: string): string | undefined {
   } catch {
     throw new ConfigurationError(`${key} must be a valid URL`);
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:" && parsed.protocol !== "redis:" && parsed.protocol !== "postgresql:") {
+  const allowed = new Set(["http:", "https:", "redis:", "rediss:", "postgres:", "postgresql:"]);
+  if (!allowed.has(parsed.protocol)) {
     throw new ConfigurationError(`${key} uses an unsupported protocol`);
   }
   return value;
 }
 
-function booleanValue(env: NodeJS.ProcessEnv, key: string): boolean {
+function booleanValue(env: Record<string, string | undefined>, key: string): boolean {
   const value = env[key]?.trim().toLowerCase() ?? "false";
   if (value === "true") return true;
   if (value === "false") return false;
   throw new ConfigurationError(`${key} must be true or false`);
 }
 
-export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
+export function loadRuntimeConfig(env: Record<string, string | undefined>): RuntimeConfig {
   const nodeEnv = env.NODE_ENV ?? "development";
   if (nodeEnv !== "development" && nodeEnv !== "test" && nodeEnv !== "production") {
     throw new ConfigurationError("NODE_ENV must be development, test, or production");
   }
 
   const logLevel = env.LOG_LEVEL ?? "info";
-  if (!["debug", "info", "warn", "error"].includes(logLevel)) {
+  if (logLevel !== "debug" && logLevel !== "info" && logLevel !== "warn" && logLevel !== "error") {
     throw new ConfigurationError("LOG_LEVEL is invalid");
   }
 
@@ -78,7 +79,7 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
 
   return {
     nodeEnv,
-    logLevel: logLevel as RuntimeConfig["logLevel"],
+    logLevel,
     databaseUrl: optionalUrl(env, "DATABASE_URL"),
     redisUrl: optionalUrl(env, "REDIS_URL"),
     temporalAddress: env.TEMPORAL_ADDRESS?.trim() || undefined,

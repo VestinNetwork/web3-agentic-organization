@@ -59,11 +59,7 @@ export interface PolicyDecision {
 }
 
 export interface PolicyPort {
-  authorize(
-    context: AuthorizationContext,
-    capability: string,
-    now: Date,
-  ): Promise<PolicyDecision>;
+  authorize(context: AuthorizationContext, capability: string, now: Date): Promise<PolicyDecision>;
 }
 
 export class DomainInvariantError extends Error {
@@ -81,10 +77,7 @@ export function createIdentifier(value: string): Identifier {
   return normalized as Identifier;
 }
 
-export function assertMissionTransition(
-  from: MissionStatus,
-  to: MissionStatus,
-): void {
+export function assertMissionTransition(from: MissionStatus, to: MissionStatus): void {
   const transitions: Record<MissionStatus, readonly MissionStatus[]> = {
     draft: ["planned", "cancelled"],
     planned: ["awaiting_approval", "running", "cancelled"],
@@ -103,33 +96,23 @@ export function assertMissionTransition(
 
 export function validateTaskGraph(tasks: readonly MissionTask[]): void {
   const byId = new Map(tasks.map((task) => [task.id, task]));
-  if (byId.size !== tasks.length) {
-    throw new DomainInvariantError("Task IDs must be unique");
-  }
+  if (byId.size !== tasks.length) throw new DomainInvariantError("Task IDs must be unique");
 
   for (const task of tasks) {
     for (const dependency of task.dependencies) {
-      if (!byId.has(dependency)) {
-        throw new DomainInvariantError(`Unknown dependency: ${dependency}`);
-      }
-      if (dependency === task.id) {
-        throw new DomainInvariantError("Task cannot depend on itself");
-      }
+      if (!byId.has(dependency)) throw new DomainInvariantError(`Unknown dependency: ${dependency}`);
+      if (dependency === task.id) throw new DomainInvariantError("Task cannot depend on itself");
     }
   }
 
   const visiting = new Set<Identifier>();
   const visited = new Set<Identifier>();
-
   const visit = (id: Identifier): void => {
-    if (visiting.has(id)) {
-      throw new DomainInvariantError("Task graph contains a cycle");
-    }
+    if (visiting.has(id)) throw new DomainInvariantError("Task graph contains a cycle");
     if (visited.has(id)) return;
-
-    visiting.add(id);
     const task = byId.get(id);
     if (!task) throw new DomainInvariantError(`Unknown task: ${id}`);
+    visiting.add(id);
     for (const dependency of task.dependencies) visit(dependency);
     visiting.delete(id);
     visited.add(id);
@@ -145,14 +128,11 @@ export function evaluateOrganizationGrant(
 ): PolicyDecision {
   const valid = context.grants.some((grant) => {
     const expiresAt = Date.parse(grant.expiresAt);
-    return (
-      grant.capability === capability &&
+    return grant.capability === capability &&
       grant.projectId === context.projectId &&
       Number.isFinite(expiresAt) &&
-      expiresAt > now.getTime()
-    );
+      expiresAt > now.getTime();
   });
-
   return {
     effect: valid ? "allow" : "deny",
     reason: valid ? "matching unexpired project grant" : "no matching unexpired project grant",
