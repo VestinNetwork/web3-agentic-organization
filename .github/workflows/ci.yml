@@ -27,7 +27,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --no-frozen-lockfile
-      - run: pnpm format
+      - run: pnpm exec prettier --write .
+      - run: pnpm exec prettier --check .
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
